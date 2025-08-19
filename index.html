@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Instant To-Do & Notes (Pro)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">⚡ Instant To-Do</div>
+      <nav>
+        <button class="nav-btn active" data-view="home">Home</button>
+        <button class="nav-btn" data-view="tasks">Tasks</button>
+        <button class="nav-btn" data-view="notes">Notes</button>
+        <button class="nav-btn" data-view="trash">Trash</button>
+      </nav>
+
+      <section class="calendar-card">
+        <div class="calendar-header">
+          <button id="calPrev" title="Previous month">‹</button>
+          <div id="calTitle"></div>
+          <button id="calNext" title="Next month">›</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <span class="dot due"></span> due &nbsp; <span class="dot today"></span> today
+        </div>
+      </section>
+
+      <footer class="sidebar-footer">
+        <small>LocalStorage • Works offline</small><br />
+        <button id="themeToggle" class="ghost">🌙/☀️ Theme</button>
+      </footer>
+    </aside>
+
+    <main class="main">
+      <!-- HOME -->
+      <section id="view-home" class="view visible">
+        <h1>Welcome 👋</h1>
+        <p>Use the calendar to filter tasks by day, or jump into Tasks/Notes. Everything is saved locally.</p>
+        <div class="quick-actions">
+          <button id="quickAddTask" class="primary">+ New Task</button>
+          <button id="quickAddNote" class="secondary">+ New Note</button>
+        </div>
+        <div class="stats" id="homeStats"></div>
+        <h2>Upcoming</h2>
+        <ul id="homeUpcoming" class="task-list"></ul>
+      </section>
+
+      <!-- TASKS -->
+      <section id="view-tasks" class="view">
+        <header class="view-header">
+          <h1>Tasks</h1>
+          <div class="actions">
+            <input type="search" id="taskSearch" placeholder="Search tasks..." />
+            <button id="addTaskBtn" class="primary">+ Add Task</button>
+            <button id="exportData" class="ghost">Export</button>
+            <input type="file" id="importData" hidden />
+            <button id="importBtn" class="ghost">Import</button>
+          </div>
+        </header>
+
+        <div class="filters">
+          <select id="statusFilter">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="completed">Completed</option>
+            <option value="overdue">Overdue</option>
+          </select>
+          <select id="repeatFilter">
+            <option value="all">All repeats</option>
+            <option value="none">One-time</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom</option>
+          </select>
+          <select id="sortBy">
+            <option value="date">Sort: Date</option>
+            <option value="priority">Sort: Priority</option>
+            <option value="title">Sort: Title</option>
+          </select>
+          <button id="clearFilters" class="ghost">Clear</button>
+        </div>
+
+        <ul id="taskList" class="task-list"></ul>
+      </section>
+
+      <!-- NOTES -->
+      <section id="view-notes" class="view">
+        <header class="view-header">
+          <h1>Notes</h1>
+          <div class="actions">
+            <input type="search" id="noteSearch" placeholder="Search notes..." />
+            <button id="addNoteBtn" class="primary">+ Add Note</button>
+          </div>
+        </header>
+        <div id="notesGrid" class="notes-grid"></div>
+      </section>
+
+      <!-- TRASH -->
+      <section id="view-trash" class="view">
+        <header class="view-header">
+          <h1>Trash</h1>
+        </header>
+        <h3>Deleted Tasks</h3>
+        <ul id="trashTaskList" class="task-list"></ul>
+        <h3 style="margin-top:16px">Deleted Notes</h3>
+        <div id="trashNotesGrid" class="notes-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ADD/EDIT TASK MODAL -->
+  <dialog id="taskModal">
+    <form id="taskForm" method="dialog">
+      <h2 id="taskModalTitle">New Task</h2>
+      <input type="hidden" id="taskId" />
+      <label>
+        Title
+        <input type="text" id="taskTitle" required maxlength="120" />
+      </label>
+      <label>
+        Description
+        <textarea id="taskDesc" rows="3" placeholder="Optional"></textarea>
+      </label>
+      <div class="row">
+        <label class="half">
+          Date
+          <input type="date" id="taskDate" required />
+        </label>
+        <label class="half">
+          Time
+          <input type="time" id="taskTime" required />
+        </label>
+      </div>
+      <label>
+        Repeat
+        <select id="taskRepeat">
+          <option value="none">One-time</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="custom">Custom Interval</option>
+        </select>
+      </label>
+      <div id="customRepeatWrap" class="row" style="display:none">
+        <label class="half">
+          Every
+          <input type="number" id="repeatEvery" min="1" value="1" />
+        </label>
+        <label class="half">
+          Unit
+          <select id="repeatUnit">
+            <option value="days">Days</option>
+            <option value="weeks">Weeks</option>
+            <option value="months">Months</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        Priority
+        <select id="taskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </label>
+      <menu>
+        <button value="cancel" class="ghost">Cancel</button>
+        <button id="saveTaskBtn" class="primary" value="default">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- ADD/EDIT NOTE MODAL -->
+  <dialog id="noteModal">
+    <form id="noteForm" method="dialog">
+      <h2 id="noteModalTitle">New Note</h2>
+      <input type="hidden" id="noteId" />
+      <label>
+        Title
+        <input type="text" id="noteTitle" required maxlength="120" />
+      </label>
+      <label>
+        Note
+        <textarea id="noteBody" rows="8" required></textarea>
+      </label>
+      <label>
+        Color
+        <input type="color" id="noteColor" value="#111527" />
+      </label>
+      <label class="row" style="align-items:center;gap:8px">
+        <input type="checkbox" id="notePinned"> Pin note to top
+      </label>
+      <menu>
+        <button value="cancel" class="ghost">Cancel</button>
+        <button id="saveNoteBtn" class="primary" value="default">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <template id="taskItemTpl">
+    <li class="task">
+      <div class="task-left">
+        <input type="checkbox" class="task-check" />
+        <div class="task-main">
+          <div class="task-title"></div>
+          <div class="task-meta"></div>
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="ghost xs edit">Edit</button>
+        <button class="ghost xs delete">Delete</button>
+      </div>
+    </li>
+  </template>
+
+  <template id="noteCardTpl">
+    <div class="note-card">
+      <div class="note-header">
+        <h3 class="note-title"></h3>
+        <div class="note-actions">
+          <button class="ghost xs edit">Edit</button>
+          <button class="ghost xs delete">Delete</button>
+        </div>
+      </div>
+      <p class="note-body"></p>
+      <div class="note-footer"></div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
